@@ -1,0 +1,3 @@
+[tasks."diagrams:build"]
+dir = "architecture"
+run = "mise run build"

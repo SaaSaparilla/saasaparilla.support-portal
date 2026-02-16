@@ -1,0 +1,5 @@
+[tools]
+d2 = "0.7.1"
+
+[tasks.build]
+run = "d2 diagrams.d2"
