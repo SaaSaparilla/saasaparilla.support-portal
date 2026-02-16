@@ -1,0 +1,27 @@
+[package]
+name = "saasaparilla-support-portal"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+homepage.workspace = true
+repository.workspace = true
+readme.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+axum.workspace = true
+gray_matter.workspace = true
+itertools.workspace = true
+k8s-openapi.workspace = true
+kube.workspace = true
+schemars.workspace = true
+sqlx.workspace = true
+sycamore.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+
+[dev-dependencies]
+rstest.workspace = true
