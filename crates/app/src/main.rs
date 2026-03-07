@@ -1,9 +1,15 @@
-mod database;
-mod job;
-mod clap;
-mod frontend;
+use crate::job::{ConfigFactory, Manager};
+
+mod api;
 mod authn;
 mod authz;
-mod api;
+mod clap;
+mod database;
+mod frontend;
+mod job;
 
-fn main() {}
+fn main() -> anyhow::Result<()> {
+    let config = job::dockerd::ConfigFactory::create();
+    job::dockerd::Manager::submit(config)?;
+    Ok(())
+}
