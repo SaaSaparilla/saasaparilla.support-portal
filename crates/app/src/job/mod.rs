@@ -1,49 +1,93 @@
+use hifitime;
+use serde::Deserialize;
+
 pub mod dockerd;
 pub mod kubernetes;
 
-// This approach isn't going to work.  We're going to have to figure out what our options for
-// arbitrary depth n-ary trees of unknown leaf type are unless we want to parse our strings
-// directly in this module.  Maybe that is what we'll have to do in order to support arbitrary
-// job definitions that don't require recompilation like backstage
-
-type Result<T> = anyhow::Result<T>;
-type Error = anyhow::Error;
 type ID = String; // TODO: UUID
+type Message = String;
+type ImageRef = String; //TODO: oci image identifier
+type Command = String;
+type Argument = String;
 
-enum Platform {
-    DockerD,
-    Kubernetes,
-}
-
-enum Spec {
-    DockerD(dockerd::Spec),
-    Kubernetes(kubernetes::Spec),
-}
-
-enum Status {
-    DockerD(dockerd::Status),
-    Kubernetes(kubernetes::Status),
-}
-
-pub struct Metadata {
-    id: ID,
-    kind: Platform,
-}
-
+#[derive(Debug, Deserialize)]
 pub struct Config {
+    kind: Platform,
     metadata: Metadata,
     spec: Spec,
     status: Option<Status>,
 }
 
-//TODO: make individual executor impls private and only take in a json string or similar struct
-pub trait ConfigFactory {
-    fn create() -> Config;
-    //TODO: from<types>
+#[derive(Debug, Deserialize)]
+enum Platform {
+    DockerD,
+    Kubernetes,
+    Shell,
 }
 
-pub trait Manager {
-    fn submit(config: Config) -> Result<Config>;
-    fn observe(job_id: ID) -> Result<Config>;
-    fn cancel(job_id: ID) -> Result<Config>;
+#[derive(Debug, Deserialize)]
+pub struct Metadata {
+    id: ID,
+    created_at: hifitime::Epoch,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct Spec {
+    image: ImageRef,
+    command: Command,
+    args: Vec<Argument>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct Status {
+    state: RuntimeState,
+    last_updated_time: hifitime::Epoch,
+    message: Message,
+}
+
+#[derive(Debug, Deserialize)]
+enum RuntimeState {
+    Queued,
+    Running,
+    Cancelled,
+    Succeeded,
+    Failed,
+}
+
+pub trait AbstractManager {
+    fn submit(config: Config) -> anyhow::Result<Config>;
+    fn observe(job_id: ID) -> anyhow::Result<Config>;
+    fn cancel(job_id: ID) -> anyhow::Result<Config>;
+}
+
+pub struct Manager;
+impl Manager {
+    pub fn submit(config: Config) -> anyhow::Result<Config> {
+        <Self as AbstractManager>::submit(config)
+    }
+    pub fn observe(job_id: ID) -> anyhow::Result<Config> {
+        <Self as AbstractManager>::observe(job_id)
+    }
+    pub fn cancel(job_id: ID) -> anyhow::Result<Config> {
+        <Self as AbstractManager>::cancel(job_id)
+    }
+}
+
+impl AbstractManager for Manager {
+    fn submit(config: Config) -> anyhow::Result<Config> {
+        match config.kind {
+            Platform::DockerD => dockerd::DockerManager::submit(config),
+            Platform::Kubernetes => kubernetes::KubernetesManager::submit(config),
+            Platform::Shell => todo!(),
+        }
+    }
+
+    fn observe(job_id: ID) -> anyhow::Result<Config> {
+        todo!("retrieve job definition and match to the correct impl");
+        todo!("return a stream of updates")
+    }
+
+    fn cancel(job_id: ID) -> anyhow::Result<Config> {
+        todo!("retrieve job definition and match to the correct impl")
+    }
 }

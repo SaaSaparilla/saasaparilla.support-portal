@@ -1,37 +1,17 @@
-use crate::job::{Config, ID};
-
-pub struct Spec {
-    jobSpec: String,
-}
-pub struct Status {}
-
-pub struct ConfigFactory;
-impl super::ConfigFactory for ConfigFactory {
-    fn create() -> super::Config {
-        super::Config {
-            metadata: super::Metadata {
-                id: "placeholder".into(),
-                kind: super::Platform::Kubernetes,
-            },
-            spec: super::Spec::Kubernetes(Spec {
-                jobSpec: "placeholder".into(),
-            }),
-            status: None,
-        }
+pub struct KubernetesManager;
+impl super::AbstractManager for KubernetesManager {
+    fn submit(config: super::Config) -> anyhow::Result<super::Config> {
+        println!("{:?}", config);
+        Ok(config)
     }
-}
 
-pub struct Manager;
-impl super::Manager for Manager {
-    fn submit(config: Config) -> crate::job::Result<Config> {
+    fn observe(job_id: super::ID) -> anyhow::Result<super::Config> {
+        println!("{:?}", job_id);
         unimplemented!();
     }
 
-    fn observe(job_id: ID) -> crate::job::Result<Config> {
-        unimplemented!();
-    }
-
-    fn cancel(job_id: ID) -> crate::job::Result<Config> {
+    fn cancel(job_id: super::ID) -> anyhow::Result<super::Config> {
+        println!("{:?}", job_id);
         unimplemented!();
     }
 }
