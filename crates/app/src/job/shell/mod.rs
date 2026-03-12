@@ -1,10 +1,10 @@
-pub struct KubernetesManager;
-impl KubernetesManager {
+pub struct ShellManager;
+impl ShellManager {
     pub(crate) fn new() -> Self {
         Self {}
     }
 }
-impl super::AbstractManager for KubernetesManager {
+impl super::AbstractManager for ShellManager {
     fn submit(&mut self, config: super::Config) -> anyhow::Result<super::Config> {
         println!("{:?}", config);
         Ok(config)

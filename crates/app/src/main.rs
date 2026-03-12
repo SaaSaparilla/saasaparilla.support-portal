@@ -8,6 +8,8 @@ mod database;
 mod frontend;
 mod job;
 
+use job::AbstractManager;
+
 fn main() -> anyhow::Result<()> {
     let config = r#"
     kind: DockerD
@@ -26,6 +28,12 @@ fn main() -> anyhow::Result<()> {
         message: "Container started successfully"
     "#;
     let config = serde_yaml_ng::from_str(config)?;
-    job::Manager::submit(config)?;
+    let mut manager = job::Manager::new(
+        job::dockerd::DockerManager::new(),
+        job::kubernetes::KubernetesManager::new(),
+        job::shell::ShellManager::new(),
+        Box::new(database::memory::MemoryDatabase::new()),
+    );
+    manager.submit(config)?;
     Ok(())
 }
