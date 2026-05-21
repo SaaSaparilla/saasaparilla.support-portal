@@ -9,15 +9,16 @@ pub(crate) type ID = String; // TODO: UUID
 type Argument = String;
 type Command = String;
 type ImageRef = String; //TODO: oci image identifier
+type JobName = String;
 type Message = String;
 type OwnerRef = String;
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct Config {
-    kind: Platform,
-    metadata: Metadata,
-    spec: Spec,
-    status: Option<Status>,
+    pub kind: Platform,
+    pub metadata: Metadata,
+    pub spec: Spec,
+    pub status: Option<Status>,
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -29,23 +30,25 @@ enum Platform {
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct Metadata {
-    id: ID,
-    owner: OwnerRef,
-    created_at: hifitime::Epoch,
+    pub id: Option<ID>,
+    // TODO: serde require non-empty string of specific charset
+    pub name: JobName,
+    pub owner: Option<OwnerRef>,
+    pub created_at: Option<hifitime::Epoch>,
 }
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct Spec {
-    image: ImageRef,
-    command: Command,
-    args: Vec<Argument>,
+    pub image: ImageRef,
+    pub command: Command,
+    pub args: Vec<Argument>,
 }
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct Status {
-    state: RuntimeState,
-    last_updated_time: hifitime::Epoch,
-    message: Message,
+    pub state: RuntimeState,
+    pub last_updated_time: hifitime::Epoch,
+    pub message: Message,
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -70,7 +73,7 @@ pub(crate) trait ShellManager: AbstractManager {}
 
 pub(crate) trait Database {
     fn get_job(&self, id: &ID) -> anyhow::Result<Config>;
-    fn save_job(&mut self, id: &ID, config: &Config) -> anyhow::Result<Config>;
+    fn save_job(&mut self, config: &Config) -> anyhow::Result<Config>;
 }
 
 pub(crate) struct Manager<Do, Ku, Sh, Da> {
@@ -83,14 +86,46 @@ pub(crate) struct Manager<Do, Ku, Sh, Da> {
 impl<Do: DockerManager, Ku: KubernetesManager, Sh: ShellManager, Da: Database> AbstractManager
     for Manager<Do, Ku, Sh, Da>
 {
-    fn submit(&mut self, config: Config) -> anyhow::Result<Config> {
-        self.database.save_job(&config.metadata.id, &config)?;
+    fn submit(&mut self, mut config: Config) -> anyhow::Result<Config> {
+        // TODO: remove after serde enforces this during deserialization
+        if config.metadata.name.is_empty() {
+            return Err(anyhow::anyhow!("Job name cannot be empty"));
+        }
+
+        // TODO: separate job write definition from job read definition?
+        if config.status.is_some() {
+            return Err(anyhow::anyhow!(
+                "Job status cannot be set during submission"
+            ));
+        }
+
+        let created_at = hifitime::Epoch::now()?;
+        let id = (&config.metadata.name.to_string()).clone()
+            + "-"
+            + &*created_at.to_isoformat()
+            + "-"
+            // TODO: clap: set instance owner name
+            + "saasaparilla-support-portal"
+            + "-"
+            // TODO: clap (unmodifiable): define `const CHARSET: &[u8] = b"abcdefghijklmnopqrstuvwxyz0123456789";` and select from that slice
+            + &*(0..10).map(|_| rand::random_range('a'..='z')).collect::<String>();
+        config.metadata.created_at = Some(created_at);
+        config.metadata.id = Some(id.clone());
+        config.metadata.owner = Some("support-portal".to_string());
+        config.status = Some(Status {
+            state: RuntimeState::Queued,
+            last_updated_time: created_at,
+            message: "Job Submitted".to_string(),
+        });
+
+        self.database.save_job(&config)?;
+        // TODO: event? message passing?
         let result = match config.kind {
             Platform::DockerD => self.dockerd.submit(config)?,
             Platform::Kubernetes => self.kubernetes.submit(config)?,
             Platform::Shell => self.shell.submit(config)?,
         };
-        self.database.save_job(&result.metadata.id, &result)?;
+        self.database.save_job(&result)?;
         Ok(result)
     }
 
@@ -101,7 +136,7 @@ impl<Do: DockerManager, Ku: KubernetesManager, Sh: ShellManager, Da: Database> A
             Platform::Kubernetes => self.kubernetes.observe(job_id)?,
             Platform::Shell => self.shell.observe(job_id)?,
         };
-        self.database.save_job(&result.metadata.id, &result)?;
+        self.database.save_job(&result)?;
         Ok(result)
     }
 
@@ -112,7 +147,7 @@ impl<Do: DockerManager, Ku: KubernetesManager, Sh: ShellManager, Da: Database> A
             Platform::Kubernetes => self.kubernetes.cancel(job_id)?,
             Platform::Shell => self.shell.cancel(job_id)?,
         };
-        self.database.save_job(&result.metadata.id, &result)?;
+        self.database.save_job(&result)?;
         Ok(result)
     }
 }

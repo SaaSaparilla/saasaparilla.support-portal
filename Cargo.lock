@@ -1737,6 +1737,7 @@ dependencies = [
  "itertools",
  "k8s-openapi",
  "kube",
+ "rand 0.10.1",
  "rstest",
  "schemars",
  "serde",

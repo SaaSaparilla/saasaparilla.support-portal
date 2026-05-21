@@ -14,19 +14,13 @@ fn main() -> anyhow::Result<()> {
     let config = r#"
     kind: DockerD
     metadata:
-        id: "placeholder"
-        owner: "saasaparilla-support-portal-instance-a"
-        created_at: "2026-03-08T19:45:05.709164071 UTC"
+        name: "docker-job"
     spec:
         image: "python:3.13"
         command: "python"
         args:
             - "-c"
             - "print('hello world')"
-    status:
-        state: Running
-        last_updated_time: "2026-03-08T19:45:05.709164071 UTC"
-        message: "Container started successfully"
     "#;
     let config: job::Config = serde_yaml_ng::from_str(config)?;
     let mut job_manager = job::ManagerBuilder::new()
