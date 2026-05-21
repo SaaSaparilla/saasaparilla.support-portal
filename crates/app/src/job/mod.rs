@@ -6,10 +6,11 @@ pub(crate) mod kubernetes;
 pub(crate) mod shell;
 
 pub(crate) type ID = String; // TODO: UUID
-type Message = String;
-type ImageRef = String; //TODO: oci image identifier
-type Command = String;
 type Argument = String;
+type Command = String;
+type ImageRef = String; //TODO: oci image identifier
+type Message = String;
+type OwnerRef = String;
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct Config {
@@ -29,6 +30,7 @@ enum Platform {
 #[derive(Clone, Debug, Deserialize)]
 pub struct Metadata {
     id: ID,
+    owner: OwnerRef,
     created_at: hifitime::Epoch,
 }
 
