@@ -9,7 +9,10 @@ struct GetJobStatusV1Request;
 struct GetJobStatusV1Response;
 
 trait GetJobStatusV1 {
-    fn get_job_status(&self, job: GetJobStatusV1Request) -> Result<GetJobStatusV1Response, anyhow::Error>;
+    fn get_job_status(
+        &self,
+        job: GetJobStatusV1Request,
+    ) -> Result<GetJobStatusV1Response, anyhow::Error>;
 }
 
 struct CancelJobV1Request;

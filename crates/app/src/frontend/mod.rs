@@ -1,2 +1,2 @@
-mod web;
 mod cli;
+mod web;

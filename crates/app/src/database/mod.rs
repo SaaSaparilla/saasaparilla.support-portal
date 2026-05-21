@@ -1,2 +1,2 @@
-pub(crate) mod sqlite;
 pub(crate) mod memory;
+pub(crate) mod sqlite;
