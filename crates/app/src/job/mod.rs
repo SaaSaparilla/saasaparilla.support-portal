@@ -3,6 +3,7 @@ use serde::Deserialize;
 
 pub(crate) mod dockerd;
 pub(crate) mod kubernetes;
+pub(crate) mod noop;
 pub(crate) mod shell;
 
 pub(crate) type ID = String; // TODO: UUID

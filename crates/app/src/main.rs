@@ -24,9 +24,9 @@ fn main() -> anyhow::Result<()> {
     "#;
     let config: job::Config = serde_yaml_ng::from_str(config)?;
     let mut job_manager = job::ManagerBuilder::new()
-        .with_dockerd(job::dockerd::DockerManager::new())
-        .with_kubernetes(job::kubernetes::KubernetesManager::new())
-        .with_shell(job::shell::ShellManager::new())
+        .with_dockerd(job::noop::NoopManager::new())
+        .with_kubernetes(job::noop::NoopManager::new())
+        .with_shell(job::noop::NoopManager::new())
         .with_database(database::memory::MemoryDatabase::new())
         .build();
     job_manager.submit(config)?;

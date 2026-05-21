@@ -1,4 +1,11 @@
-- make job::ManagerBuilder
 - make in memory rocksdb impl
-- make empty impl of job::AbstractManager for testing
 - figure out how to version job submissions (do we need this?)
+- actually run something, either in docker or shell
+- split apispec from dbspec (daos)
+- logging framework
+- tracing framework
+- prometheus metrics (what is needed that isn't already handled by job statuses and metrics-server?)
+- frontend blech
+- tokio/hyper/w/e
+- crdts?
+- tests
