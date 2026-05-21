@@ -20,3 +20,4 @@ impl super::AbstractManager for DockerManager {
         unimplemented!();
     }
 }
+impl super::DockerManager for DockerManager {}

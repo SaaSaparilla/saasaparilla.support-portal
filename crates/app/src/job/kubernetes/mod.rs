@@ -20,3 +20,4 @@ impl super::AbstractManager for KubernetesManager {
         unimplemented!();
     }
 }
+impl super::KubernetesManager for KubernetesManager {}

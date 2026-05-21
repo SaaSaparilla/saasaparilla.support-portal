@@ -20,3 +20,4 @@ impl super::AbstractManager for ShellManager {
         unimplemented!();
     }
 }
+impl super::ShellManager for ShellManager {}

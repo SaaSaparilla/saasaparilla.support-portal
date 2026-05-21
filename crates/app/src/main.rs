@@ -15,6 +15,7 @@ fn main() -> anyhow::Result<()> {
     kind: DockerD
     metadata:
         id: "placeholder"
+        owner: "saasaparilla-support-portal-instance-a"
         created_at: "2026-03-08T19:45:05.709164071 UTC"
     spec:
         image: "python:3.13"
@@ -27,13 +28,13 @@ fn main() -> anyhow::Result<()> {
         last_updated_time: "2026-03-08T19:45:05.709164071 UTC"
         message: "Container started successfully"
     "#;
-    let config = serde_yaml_ng::from_str(config)?;
-    let mut manager = job::Manager::new(
-        job::dockerd::DockerManager::new(),
-        job::kubernetes::KubernetesManager::new(),
-        job::shell::ShellManager::new(),
-        Box::new(database::memory::MemoryDatabase::new()),
-    );
-    manager.submit(config)?;
+    let config: job::Config = serde_yaml_ng::from_str(config)?;
+    let mut job_manager = job::ManagerBuilder::new()
+        .with_dockerd(job::dockerd::DockerManager::new())
+        .with_kubernetes(job::kubernetes::KubernetesManager::new())
+        .with_shell(job::shell::ShellManager::new())
+        .with_database(database::memory::MemoryDatabase::new())
+        .build();
+    job_manager.submit(config)?;
     Ok(())
 }
